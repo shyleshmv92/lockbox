@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src 'self' https://www.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; img-src 'self' data:; manifest-src 'self'; worker-src 'self'">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lockbox">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<title>Lockbox</title>
+<style>
+:root{--bg:#0f172a;--panel:#1e293b;--panel2:#273449;--line:#334155;--text:#e2e8f0;--muted:#94a3b8;--accent:#f5b301;--accent-ink:#1a1300;--danger:#ef4444;--ok:#22c55e;--radius:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+button,input,textarea,select{font:inherit;color:inherit}
+.hidden{display:none!important}
+.screen{min-height:100%;display:flex;flex-direction:column}
+.center{flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px;max-width:440px;margin:0 auto;width:100%}
+.logo{width:72px;height:72px;margin:0 auto 12px;display:block}
+h1{font-size:26px;margin:0 0 4px;text-align:center}
+h2{font-size:19px;margin:0}
+.sub{color:var(--muted);text-align:center;margin:0 0 24px}
+label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+input,textarea,select{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{min-height:90px;resize:vertical}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;padding:12px 16px;background:var(--panel2);cursor:pointer;font-weight:600}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn.ghost{background:transparent}
+.btn.block{width:100%;margin-top:14px}
+.btn:disabled{opacity:.5}
+.link{background:none;border:0;color:var(--accent);padding:8px;cursor:pointer;font-weight:600}
+.err{color:var(--danger);font-size:14px;min-height:20px;margin-top:8px}
+.note{color:var(--muted);font-size:13px}
+/* header */
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px 8px;border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;gap:8px}
+.hrow h2{flex:1}
+.icon-btn{width:40px;height:40px;border-radius:10px;border:0;background:var(--panel);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+a.icon-btn{color:inherit;text-decoration:none}
+.icon-btn svg{width:20px;height:20px}
+.search{margin-top:10px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:none}
+.chip{flex:none;border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.sync-dot{font-size:12px;color:var(--muted)}
+/* list */
+main{flex:1;padding:8px 12px 100px}
+.item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--radius);background:var(--panel);margin:8px 0;cursor:pointer}
+.avatar{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex:none;color:#fff}
+.meta{flex:1;min-width:0}
+.meta .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta .u{color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty{text-align:center;color:var(--muted);margin-top:60px;padding:0 24px}
+.fab{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);font-size:30px;box-shadow:0 6px 20px rgba(0,0,0,.4);cursor:pointer}
+/* sheet */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:16px 16px calc(24px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+@media(min-width:700px){.sheet-bg{align-items:center}.sheet{border-radius:18px;border:1px solid var(--line)}}
+.sheet-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sheet-head h2{flex:1}
+.field{position:relative}
+.field input{padding-right:96px}
+.field .acts{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:flex;gap:4px}
+.field .acts .icon-btn{width:36px;height:36px;background:var(--panel2)}
+.meter{height:6px;border-radius:3px;background:var(--line);margin-top:8px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;transition:width .2s}
+.row{display:flex;gap:10px;align-items:center}
+.row>*{flex:1}
+.toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+.toggle input{width:auto;transform:scale(1.3)}
+.genout{font-family:ui-monospace,Menlo,monospace;font-size:18px;word-break:break-all;background:var(--panel);padding:14px;border-radius:10px;margin-top:8px}
+.section{margin-top:22px;padding-top:4px}
+.section h3{font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#f8fafc;color:#0f172a;padding:10px 16px;border-radius:999px;font-weight:600;z-index:40;max-width:90vw;text-align:center}
+.view-val{background:var(--panel);border-radius:10px;padding:12px;word-break:break-all;display:flex;align-items:center;gap:8px}
+.view-val span{flex:1}
+.mono{font-family:ui-monospace,Menlo,monospace}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<section id="scr-setup" class="screen hidden">
+  <div class="center">
+    <img class="logo" src="icons/icon.svg" alt="">
+    <h1>Welcome to Lockbox</h1>
+    <p class="sub">Your passwords, encrypted on this device and backed up to your Google Drive.</p>
+    <label for="new-pw">Create a master password</label>
+    <input id="new-pw" type="password" autocomplete="new-password">
+    <div class="meter"><i id="new-meter"></i></div>
+    <label for="new-pw2">Confirm master password</label>
+    <input id="new-pw2" type="password" autocomplete="new-password">
+    <p class="note">There is no way to recover this password. If you forget it, your vault cannot be opened — not even by you.</p>
+    <div class="err" id="setup-err"></div>
+    <button class="btn primary block" id="btn-create">Create vault</button>
+    <div style="text-align:center;margin-top:18px">
+      <button class="link" id="btn-restore-drive">Restore from Google Drive</button><br>
+      <button class="link" id="btn-restore-file">Restore from a backup file</button>
+    </div>
+  </div>
+</section>
+
+<!-- UNLOCK -->
+<section id="scr-unlock" class="screen hidden">
+  <div class="center">
+    <img class="logo" src="icons/icon.svg" alt="">
+    <h1>Lockbox</h1>
+    <p class="sub">Enter your master password to unlock</p>
+    <input id="unlock-pw" type="password" autocomplete="current-password" placeholder="Master password">
+    <div class="err" id="unlock-err"></div>
+    <button class="btn primary block" id="btn-unlock">Unlock</button>
+  </div>
+</section>
+
+<!-- VAULT -->
+<section id="scr-vault" class="screen hidden">
+  <header>
+    <div class="hrow">
+      <h2>Vault</h2>
+      <span class="sync-dot" id="sync-state"></span>
+      <button class="icon-btn" id="btn-sync" title="Sync with Google Drive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M3 21v-5h5"/></svg></button>
+      <button class="icon-btn" id="btn-gen" title="Password generator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg></button>
+      <button class="icon-btn" id="btn-settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      <button class="icon-btn" id="btn-lock" title="Lock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></button>
+    </div>
+    <input class="search" id="search" type="search" placeholder="Search vault" autocomplete="off">
+    <div class="chips" id="chips"></div>
+  </header>
+  <main id="list"></main>
+  <button class="fab" id="btn-add" aria-label="Add record">+</button>
+</section>
+
+<!-- SHEET (modal) -->
+<div class="sheet-bg hidden" id="sheet-bg"><div class="sheet" id="sheet"></div></div>
+<input type="file" id="file-in" class="hidden" accept=".lockbox,.json,application/json,application/octet-stream">
+
+<script>
+'use strict';
+/* ================= helpers ================= */
+const $ = s => document.querySelector(s);
+const te = new TextEncoder(), td = new TextDecoder();
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function b64(buf){ const a = new Uint8Array(buf); let s = ''; for (let i = 0; i < a.length; i += 0x8000) s += String.fromCharCode.apply(null, a.subarray(i, i + 0x8000)); return btoa(s); }
+function unb64(s){ const b = atob(s), a = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a; }
+const uid = () => b64(crypto.getRandomValues(new Uint8Array(12))).replace(/[+/=]/g, c => ({'+':'-','/':'_','=':''}[c]));
+let toastT;
+function toast(msg){ let t = $('.toast'); if (!t){ t = document.createElement('div'); t.className = 'toast'; document.body.appendChild(t); } t.textContent = msg; t.classList.remove('hidden'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.add('hidden'), 2200); }
+function show(id){ for (const s of document.querySelectorAll('.screen')) s.classList.add('hidden'); $(id).classList.remove('hidden'); }
+
+/* ================= storage & settings ================= */
+const LS_VAULT = 'lockbox.vault', LS_SET = 'lockbox.settings';
+const settings = Object.assign({clientId:'', autoLockMin:5, clipSec:30, lastSync:0}, JSON.parse(localStorage.getItem(LS_SET) || '{}'));
+const saveSettings = () => localStorage.setItem(LS_SET, JSON.stringify(settings));
+
+/* ================= crypto ================= */
+const ITER = 600000;
+const S = { key:null, kdf:null, vault:null, folder:'All', q:'' };
+
+async function deriveKey(pw, kdf){
+  const base = await crypto.subtle.importKey('raw', te.encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt:unb64(kdf.salt), iterations:kdf.iter, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+const newKdf = () => ({name:'PBKDF2', hash:'SHA-256', iter:ITER, salt:b64(crypto.getRandomValues(new Uint8Array(16)))});
+async function seal(obj, key = S.key, kdf = S.kdf){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, te.encode(JSON.stringify(obj)));
+  return {app:'lockbox', v:1, kdf, iv:b64(iv), ct:b64(ct)};
+}
+async function unseal(env, key){
+  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:unb64(env.iv)}, key, unb64(env.ct));
+  return JSON.parse(td.decode(pt));
+}
+function parseEnvelope(text){
+  const env = JSON.parse(text);
+  if (env.app !== 'lockbox' || !env.kdf || !env.iv || !env.ct) throw new Error('Not a Lockbox vault file');
+  return env;
+}
+async function persist(){
+  S.vault.updated = Date.now();
+  localStorage.setItem(LS_VAULT, JSON.stringify(await seal(S.vault)));
+  scheduleSync();
+}
+
+/* Open an envelope from elsewhere (Drive / file). Try the current key, otherwise ask for that file's password.
+   Returns {vault, key, kdf}. */
+async function openForeign(env, why){
+  if (S.key && env.kdf.salt === S.kdf.salt){
+    try { return {vault: await unseal(env, S.key), key:S.key, kdf:S.kdf}; } catch(e){}
+  }
+  for (;;){
+    const pw = await askPassword(why);
+    if (pw === null) throw new Error('Cancelled');
+    const key = await deriveKey(pw, env.kdf);
+    try { return {vault: await unseal(env, key), key, kdf:env.kdf}; } catch(e){ toast('Wrong password'); }
+  }
+}
+
+/* merge two vaults: newest version of each record wins; deletions are kept as tombstones */
+function merge(a, b){
+  const m = new Map();
+  for (const it of [...(a?.items || []), ...(b?.items || [])]){
+    const c = m.get(it.id);
+    if (!c || (it.updated || 0) > (c.updated || 0)) m.set(it.id, it);
+  }
+  return {version:1, items:[...m.values()], updated:Date.now()};
+}
+
+/* ================= setup / unlock / lock ================= */
+function strength(pw){
+  if (!pw) return 0;
+  let pool = 0;
+  if (/[a-z]/.test(pw)) pool += 26; if (/[A-Z]/.test(pw)) pool += 26;
+  if (/\d/.test(pw)) pool += 10; if (/[^a-zA-Z0-9]/.test(pw)) pool += 33;
+  let bits = pw.length * Math.log2(pool || 1);
+  if (/^(.)\1+$/.test(pw) || /password|123456|qwerty/i.test(pw)) bits = Math.min(bits, 20);
+  return bits;
+}
+function paintMeter(el, pw){
+  const bits = strength(pw), pct = Math.min(100, bits / 100 * 100);
+  el.style.width = pct + '%';
+  el.style.background = bits < 40 ? 'var(--danger)' : bits < 70 ? 'var(--accent)' : 'var(--ok)';
+}
+$('#new-pw').addEventListener('input', e => paintMeter($('#new-meter'), e.target.value));
+
+$('#btn-create').onclick = async () => {
+  const p1 = $('#new-pw').value, p2 = $('#new-pw2').value, err = $('#setup-err');
+  if (p1.length < 8) return err.textContent = 'Use at least 8 characters (a long passphrase is best).';
+  if (p1 !== p2) return err.textContent = 'Passwords do not match.';
+  err.textContent = 'Creating…';
+  S.kdf = newKdf(); S.key = await deriveKey(p1, S.kdf);
+  S.vault = {version:1, items:[], updated:Date.now()};
+  await persist(); err.textContent = '';
+  $('#new-pw').value = $('#new-pw2').value = '';
+  try { navigator.storage?.persist?.(); } catch(e){}
+  enterVault();
+};
+
+$('#btn-unlock').onclick = unlock;
+$('#unlock-pw').addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+async function unlock(){
+  const pw = $('#unlock-pw').value, err = $('#unlock-err');
+  if (!pw) return;
+  err.textContent = 'Unlocking…'; $('#btn-unlock').disabled = true;
+  try {
+    const env = parseEnvelope(localStorage.getItem(LS_VAULT));
+    const key = await deriveKey(pw, env.kdf);
+    S.vault = await unseal(env, key); S.key = key; S.kdf = env.kdf;
+    err.textContent = ''; $('#unlock-pw').value = '';
+    enterVault();
+    if (driveReady() && tokenValid()) syncDrive(false);
+  } catch(e){ err.textContent = 'Wrong master password.'; }
+  $('#btn-unlock').disabled = false;
+}
+
+function lock(){
+  S.key = null; S.vault = null; S.kdf = null;
+  closeSheet(); $('#list').innerHTML = ''; $('#search').value = ''; S.q = '';
+  show('#scr-unlock'); setTimeout(() => $('#unlock-pw')?.focus(), 50);
+}
+$('#btn-lock').onclick = lock;
+
+function enterVault(){ show('#scr-vault'); render(); paintSync(); resetIdle(); }
+
+/* auto-lock on inactivity and when app is in the background */
+let idleT, hiddenAt = 0;
+function resetIdle(){ clearTimeout(idleT); if (S.key && settings.autoLockMin > 0) idleT = setTimeout(lock, settings.autoLockMin * 60000); }
+['pointerdown','keydown','scroll','touchstart'].forEach(ev => addEventListener(ev, resetIdle, {passive:true}));
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) hiddenAt = Date.now();
+  else if (S.key && hiddenAt && Date.now() - hiddenAt > 60000) lock();
+});
+
+/* ================= list rendering ================= */
+const COLORS = ['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#3b82f6','#8b5cf6','#ec4899'];
+const colorFor = s => COLORS[[...String(s)].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
+const live = () => S.vault.items.filter(i => !i.deleted);
+
+function render(){
+  const items = live();
+  const folders = [...new Set(items.map(i => i.folder).filter(Boolean))].sort();
+  const chips = ['All', 'Favorites', ...folders];
+  if (!chips.includes(S.folder)) S.folder = 'All';
+  $('#chips').innerHTML = chips.map(c => `<button class="chip ${c === S.folder ? 'on' : ''}" data-f="${esc(c)}">${esc(c)}</button>`).join('');
+  const q = S.q.toLowerCase();
+  const shown = items.filter(i => (S.folder === 'All' || (S.folder === 'Favorites' ? i.fav : i.folder === S.folder)) &&
+      (!q || [i.title, i.username, i.url, i.folder, i.notes].some(v => (v || '').toLowerCase().includes(q))))
+    .sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) || (a.title || '').localeCompare(b.title || ''));
+  const list = $('#list');
+  if (!items.length){ list.innerHTML = `<div class="empty"><h2>Your vault is empty</h2><p>Tap <b>+</b> to save your first password.</p></div>`; return; }
+  if (!shown.length){ list.innerHTML = `<div class="empty">No matches</div>`; return; }
+  list.innerHTML = shown.map(i => `
+    <div class="item" data-id="${esc(i.id)}">
+      <div class="avatar" style="background:${colorFor(i.title)}">${esc((i.title || '?').trim()[0]?.toUpperCase() || '?')}</div>
+      <div class="meta"><div class="t">${i.fav ? '★ ' : ''}${esc(i.title || '(untitled)')}</div><div class="u">${esc(i.username || i.url || '')}</div></div>
+      <button class="icon-btn" data-copy="${esc(i.id)}" title="Copy password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>
+    </div>`).join('');
+}
+$('#chips').onclick = e => { const f = e.target.closest('.chip')?.dataset.f; if (f){ S.folder = f; render(); } };
+$('#search').addEventListener('input', e => { S.q = e.target.value; render(); });
+$('#list').onclick = e => {
+  const c = e.target.closest('[data-copy]');
+  if (c){ e.stopPropagation(); const it = S.vault.items.find(i => i.id === c.dataset.copy); return copy(it.password, 'Password'); }
+  const row = e.target.closest('.item'); if (row) openItem(row.dataset.id);
+};
+
+/* clipboard with auto-clear */
+let clipT;
+async function copy(text, what){
+  if (!text) return toast(`No ${what.toLowerCase()} saved`);
+  try { await navigator.clipboard.writeText(text); } catch(e){ return toast('Copy failed'); }
+  toast(`${what} copied` + (settings.clipSec ? ` · clears in ${settings.clipSec}s` : ''));
+  clearTimeout(clipT);
+  if (settings.clipSec) clipT = setTimeout(() => navigator.clipboard.writeText('').catch(() => {}), settings.clipSec * 1000);
+}
+
+/* ================= sheet / modals ================= */
+function openSheet(html){ $('#sheet').innerHTML = html; $('#sheet-bg').classList.remove('hidden'); $('#sheet').scrollTop = 0; }
+function closeSheet(){ $('#sheet-bg').classList.add('hidden'); $('#sheet').innerHTML = ''; if (pwResolve){ pwResolve(null); pwResolve = null; } }
+$('#sheet-bg').addEventListener('click', e => { if (e.target.id === 'sheet-bg') closeSheet(); });
+const CLOSE = `<button class="icon-btn" data-close aria-label="Close">✕</button>`;
+$('#sheet').addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSheet(); });
+
+let pwResolve = null;
+function askPassword(why){
+  return new Promise(res => {
+    openSheet(`<div class="sheet-head"><h2>Master password needed</h2>${CLOSE}</div>
+      <p class="note">${esc(why || 'Enter the master password used for this vault file.')}</p>
+      <input id="ask-pw" type="password" autocomplete="current-password" placeholder="Master password">
+      <button class="btn primary block" id="ask-ok">Continue</button>`);
+    pwResolve = res;
+    const done = () => { const v = $('#ask-pw').value; pwResolve = null; closeSheet(); res(v); };
+    $('#ask-ok').onclick = done;
+    $('#ask-pw').addEventListener('keydown', e => { if (e.key === 'Enter') done(); });
+    setTimeout(() => $('#ask-pw')?.focus(), 50);
+  });
+}
+
+const EYE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const COPY = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>`;
+const DICE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>`;
+
+/* view a record */
+function openItem(id){
+  const it = S.vault.items.find(i => i.id === id); if (!it) return;
+  const row = (label, val, key, secret) => !val ? '' : `<label>${label}</label>
+    <div class="view-val"><span class="${secret ? 'mono' : ''}" ${secret ? 'data-secret' : ''}>${secret ? '••••••••••' : esc(val)}</span>
+    ${secret ? `<button class="icon-btn" data-reveal>${EYE}</button>` : ''}<button class="icon-btn" data-cp="${key}">${COPY}</button></div>`;
+  const url = it.url && /^https?:\/\//i.test(it.url) ? it.url : (it.url ? 'https://' + it.url : '');
+  openSheet(`<div class="sheet-head"><h2>${it.fav ? '★ ' : ''}${esc(it.title || '(untitled)')}</h2><button class="btn" id="v-edit">Edit</button>${CLOSE}</div>
+    ${it.folder ? `<div class="note">Folder: ${esc(it.folder)}</div>` : ''}
+    ${row('Username / email', it.username, 'username')}
+    ${row('Password', it.password, 'password', true)}
+    ${it.url ? `<label>Website</label><div class="view-val"><span>${esc(it.url)}</span><a class="icon-btn" href="${esc(url)}" target="_blank" rel="noopener noreferrer">↗</a><button class="icon-btn" data-cp="url">${COPY}</button></div>` : ''}
+    ${it.notes ? `<label>Notes</label><div class="view-val" style="white-space:pre-wrap"><span>${esc(it.notes)}</span></div>` : ''}
+    <p class="note" style="margin-top:18px">Last modified ${new Date(it.updated).toLocaleString()}</p>`);
+  $('#v-edit').onclick = () => editItem(id);
+  $('#sheet').querySelectorAll('[data-cp]').forEach(b => b.onclick = () => copy(it[b.dataset.cp], b.dataset.cp === 'password' ? 'Password' : b.dataset.cp === 'url' ? 'Website' : 'Username'));
+  const rv = $('#sheet [data-reveal]');
+  if (rv) rv.onclick = () => { const s = $('#sheet [data-secret]'); s.textContent = s.textContent.startsWith('•') ? it.password : '••••••••••'; };
+}
+
+/* add / edit a record */
+function editItem(id){
+  const it = id ? S.vault.items.find(i => i.id === id) : {title:'', username:'', password:'', url:'', notes:'', folder:S.folder !== 'All' && S.folder !== 'Favorites' ? S.folder : '', fav:false};
+  const folders = [...new Set(live().map(i => i.folder).filter(Boolean))].sort();
+  openSheet(`<div class="sheet-head"><h2>${id ? 'Edit record' : 'New record'}</h2>${CLOSE}</div>
+    <label>Title</label><input id="e-title" value="${esc(it.title)}" placeholder="e.g. Gmail">
+    <label>Username / email</label><input id="e-user" value="${esc(it.username)}" autocapitalize="off" autocomplete="off">
+    <label>Password</label>
+    <div class="field"><input id="e-pw" type="password" class="mono" value="${esc(it.password)}" autocapitalize="off" autocomplete="new-password">
+      <div class="acts"><button class="icon-btn" id="e-eye" type="button">${EYE}</button><button class="icon-btn" id="e-gen" type="button">${DICE}</button></div></div>
+    <div class="meter"><i id="e-meter"></i></div>
+    <label>Website</label><input id="e-url" value="${esc(it.url)}" inputmode="url" autocapitalize="off" placeholder="example.com">
+    <label>Folder</label><input id="e-folder" value="${esc(it.folder)}" list="folder-list" placeholder="e.g. Banking, Work">
+    <datalist id="folder-list">${folders.map(f => `<option value="${esc(f)}">`).join('')}</datalist>
+    <label>Notes</label><textarea id="e-notes">${esc(it.notes)}</textarea>
+    <div class="toggle"><span>Favorite</span><input type="checkbox" id="e-fav" ${it.fav ? 'checked' : ''}></div>
+    <button class="btn primary block" id="e-save">Save</button>
+    ${id ? `<button class="btn danger block" id="e-del">Delete record</button>` : ''}`);
+  const pw = $('#e-pw');
+  paintMeter($('#e-meter'), pw.value);
+  pw.addEventListener('input', () => paintMeter($('#e-meter'), pw.value));
+  $('#e-eye').onclick = () => pw.type = pw.type === 'password' ? 'text' : 'password';
+  $('#e-gen').onclick = () => { pw.value = generate(genOpts); pw.type = 'text'; paintMeter($('#e-meter'), pw.value); };
+  $('#e-save').onclick = async () => {
+    const rec = {
+      ...(id ? it : {}), id: id || uid(), title: $('#e-title').value.trim(), username: $('#e-user').value.trim(), password: pw.value,
+      url: $('#e-url').value.trim(), folder: $('#e-folder').value.trim(), notes: $('#e-notes').value,
+      fav: $('#e-fav').checked, created: it.created || Date.now(), updated: Date.now()
+    };
+    if (!rec.title) rec.title = rec.url || rec.username || 'Untitled';
+    if (id) S.vault.items[S.vault.items.findIndex(i => i.id === id)] = rec; else S.vault.items.push(rec);
+    await persist(); render(); openItem(rec.id); toast('Saved');
+  };
+  if (id) $('#e-del').onclick = async () => {
+    if (!confirm('Delete this record? This also removes it from your other devices after sync.')) return;
+    S.vault.items[S.vault.items.findIndex(i => i.id === id)] = {id, deleted:true, updated:Date.now()};
+    await persist(); closeSheet(); render(); toast('Deleted');
+  };
+  if (!id) setTimeout(() => $('#e-title')?.focus(), 50);
+}
+$('#btn-add').onclick = () => editItem(null);
+
+/* ================= password generator ================= */
+const genOpts = Object.assign({len:20, lower:true, upper:true, digits:true, symbols:true}, JSON.parse(localStorage.getItem('lockbox.gen') || '{}'));
+function randInt(n){ const lim = Math.floor(0x100000000 / n) * n, a = new Uint32Array(1); do crypto.getRandomValues(a); while (a[0] >= lim); return a[0] % n; }
+function generate(o){
+  const sets = [];
+  if (o.lower) sets.push('abcdefghijkmnopqrstuvwxyz');
+  if (o.upper) sets.push('ABCDEFGHJKLMNPQRSTUVWXYZ');
+  if (o.digits) sets.push('23456789');
+  if (o.symbols) sets.push('!@#$%^&*()-_=+[]{};:,.?');
+  if (!sets.length) sets.push('abcdefghijkmnopqrstuvwxyz');
+  const all = sets.join(''), out = sets.map(s => s[randInt(s.length)]); // at least one of each
+  while (out.length < o.len) out.push(all[randInt(all.length)]);
+  for (let i = out.length - 1; i > 0; i--){ const j = randInt(i + 1); [out[i], out[j]] = [out[j], out[i]]; }
+  return out.join('');
+}
+$('#btn-gen').onclick = () => {
+  const tg = (k, l) => `<div class="toggle"><span>${l}</span><input type="checkbox" data-k="${k}" ${genOpts[k] ? 'checked' : ''}></div>`;
+  openSheet(`<div class="sheet-head"><h2>Password generator</h2>${CLOSE}</div>
+    <div class="genout" id="g-out"></div><div class="meter"><i id="g-meter"></i></div>
+    <label>Length: <b id="g-lenv">${genOpts.len}</b></label><input type="range" id="g-len" min="8" max="64" value="${genOpts.len}" style="padding:0">
+    ${tg('lower', 'Lowercase (a-z)')}${tg('upper', 'Uppercase (A-Z)')}${tg('digits', 'Numbers (0-9)')}${tg('symbols', 'Symbols (!@#…)')}
+    <div class="row" style="margin-top:14px"><button class="btn" id="g-new">Regenerate</button><button class="btn primary" id="g-copy">Copy</button></div>`);
+  const regen = () => { const p = generate(genOpts); $('#g-out').textContent = p; paintMeter($('#g-meter'), p); localStorage.setItem('lockbox.gen', JSON.stringify(genOpts)); };
+  $('#g-len').oninput = e => { genOpts.len = +e.target.value; $('#g-lenv').textContent = genOpts.len; regen(); };
+  $('#sheet').querySelectorAll('[data-k]').forEach(c => c.onchange = () => { genOpts[c.dataset.k] = c.checked; regen(); });
+  $('#g-new').onclick = regen; $('#g-copy').onclick = () => copy($('#g-out').textContent, 'Password');
+  regen();
+};
+
+/* ================= backup files ================= */
+async function exportFile(){
+  const text = JSON.stringify(await seal(S.vault));
+  const name = `lockbox-backup-${new Date().toISOString().slice(0, 10)}.lockbox`;
+  const file = new File([text], name, {type:'application/octet-stream'});
+  if (navigator.canShare && navigator.canShare({files:[file]})){
+    try { await navigator.share({files:[file], title:'Lockbox backup'}); return; } catch(e){ if (e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function pickFile(){ return new Promise(res => { const f = $('#file-in'); f.value = ''; f.onchange = () => res(f.files[0] || null); f.click(); }); }
+async function importFile(){
+  const f = await pickFile(); if (!f) return;
+  try {
+    const env = parseEnvelope(await f.text());
+    const r = await openForeign(env, 'Enter the master password that was used when this backup was made.');
+    if (!S.key){ // restoring onto a fresh device
+      S.key = r.key; S.kdf = r.kdf; S.vault = r.vault; await persist(); enterVault(); toast('Vault restored');
+    } else {
+      S.vault = merge(S.vault, r.vault); await persist(); render(); closeSheet(); toast('Backup merged into vault');
+    }
+  } catch(e){ if (e.message !== 'Cancelled') toast(e.message); }
+}
+$('#btn-restore-file').onclick = importFile;
+
+/* ================= Google Drive sync ================= */
+const SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+const DRIVE_NAME = 'lockbox.vault';
+let token = null, tokenExp = 0, gisLoading = null, syncing = false, syncT = null;
+const driveReady = () => !!settings.clientId;
+const tokenValid = () => token && Date.now() < tokenExp - 60000;
+function loadGis(){
+  if (window.google?.accounts?.oauth2) return Promise.resolve();
+  return gisLoading ||= new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
+    s.onload = res; s.onerror = () => { gisLoading = null; rej(new Error('Could not reach Google sign-in')); };
+    document.head.appendChild(s);
+  });
+}
+async function getToken(){
+  if (tokenValid()) return token;
+  if (!driveReady()) throw new Error('Add your Google Client ID in Settings first');
+  await loadGis();
+  return new Promise((res, rej) => {
+    const tc = google.accounts.oauth2.initTokenClient({
+      client_id: settings.clientId, scope: SCOPE,
+      callback: r => { if (r.error) return rej(new Error(r.error_description || r.error)); token = r.access_token; tokenExp = Date.now() + r.expires_in * 1000; res(token); },
+      error_callback: e => rej(new Error(e.type === 'popup_closed' ? 'Sign-in closed' : (e.message || 'Sign-in failed')))
+    });
+    tc.requestAccessToken({prompt: ''});
+  });
+}
+async function gfetch(url, opts = {}){
+  const r = await fetch(url, {...opts, headers:{...(opts.headers || {}), Authorization:'Bearer ' + token}});
+  if (r.status === 401){ token = null; throw new Error('Google session expired — tap sync again'); }
+  if (!r.ok) throw new Error('Google Drive error ' + r.status);
+  return r;
+}
+async function driveFind(){
+  const q = encodeURIComponent(`name='${DRIVE_NAME}' and trashed=false`);
+  const r = await gfetch(`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${q}&fields=files(id,modifiedTime)&orderBy=modifiedTime desc`);
+  return (await r.json()).files?.[0] || null;
+}
+const driveDownload = async id => (await gfetch(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`)).text();
+async function driveUpload(id, text){
+  if (id) return gfetch(`https://www.googleapis.com/upload/drive/v3/files/${id}?uploadType=media`, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:text});
+  const boundary = 'lockbox' + uid();
+  const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({name:DRIVE_NAME, parents:['appDataFolder']})}\r\n--${boundary}\r\nContent-Type: application/json\r\n\r\n${text}\r\n--${boundary}--`;
+  return gfetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {method:'POST', headers:{'Content-Type':'multipart/related; boundary=' + boundary}, body});
+}
+function paintSync(state){
+  const el = $('#sync-state'); if (!el) return;
+  if (!driveReady()){ el.textContent = ''; return; }
+  el.textContent = state || (settings.lastSync ? 'Synced ' + new Date(settings.lastSync).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Not synced');
+}
+function scheduleSync(){ if (driveReady() && tokenValid()){ clearTimeout(syncT); syncT = setTimeout(() => syncDrive(false), 1500); } else paintSync(driveReady() ? 'Changes not synced' : ''); }
+
+async function syncDrive(interactive){
+  if (syncing || !S.key) return;
+  if (!driveReady()){ if (interactive) openSettings(); return; }
+  syncing = true; paintSync('Syncing…');
+  try {
+    await getToken();
+    const file = await driveFind();
+    if (file){
+      const env = parseEnvelope(await driveDownload(file.id));
+      const r = await openForeign(env, 'The vault on Google Drive uses a different master password (it may have been changed on another device). Enter it to sync.');
+      if (r.kdf.salt !== S.kdf.salt){ S.key = r.key; S.kdf = r.kdf; toast('Master password updated from your other device'); }
+      S.vault = merge(S.vault, r.vault);
+    }
+    S.vault.updated = Date.now();
+    const text = JSON.stringify(await seal(S.vault));
+    localStorage.setItem(LS_VAULT, text);
+    await driveUpload(file?.id, text);
+    settings.lastSync = Date.now(); saveSettings();
+    render(); paintSync();
+    if (interactive) toast('Synced with Google Drive');
+  } catch(e){
+    paintSync('Sync failed'); if (interactive || e.message !== 'Cancelled') toast(e.message);
+  } finally { syncing = false; }
+}
+$('#btn-sync').onclick = () => syncDrive(true);
+
+$('#btn-restore-drive').onclick = async () => {
+  if (!driveReady()){ openSettings(true); return; }
+  try {
+    await getToken();
+    const file = await driveFind();
+    if (!file) return toast('No Lockbox vault found in this Google account');
+    const env = parseEnvelope(await driveDownload(file.id));
+    const r = await openForeign(env, 'Enter the master password of the vault stored in Google Drive.');
+    S.key = r.key; S.kdf = r.kdf; S.vault = r.vault;
+    localStorage.setItem(LS_VAULT, JSON.stringify(await seal(S.vault)));
+    settings.lastSync = Date.now(); saveSettings();
+    enterVault(); toast('Vault restored from Google Drive');
+  } catch(e){ if (e.message !== 'Cancelled') toast(e.message); }
+};
+
+/* ================= settings ================= */
+function openSettings(fromSetup){
+  const unlocked = !!S.key;
+  openSheet(`<div class="sheet-head"><h2>Settings</h2>${CLOSE}</div>
+    <div class="section"><h3>Google Drive sync</h3>
+      <label>Google OAuth Client ID</label>
+      <input id="s-cid" value="${esc(settings.clientId)}" placeholder="xxxx.apps.googleusercontent.com" autocapitalize="off" autocomplete="off">
+      <p class="note">Your vault is stored encrypted in a hidden app folder of your own Google Drive. See the README for the 5‑minute Client ID setup.</p>
+      <button class="btn block" id="s-cid-save">Save Client ID</button>
+      ${unlocked && driveReady() ? `<button class="btn block" id="s-sync">Sync now</button>` : ''}
+    </div>
+    ${unlocked ? `
+    <div class="section"><h3>Backup file</h3>
+      <p class="note">An encrypted .lockbox file. On your phone, choose <b>Drive</b> in the share sheet to save it to Google Drive.</p>
+      <div class="row"><button class="btn" id="s-export">Export backup</button><button class="btn" id="s-import">Import / merge</button></div>
+    </div>
+    <div class="section"><h3>Security</h3>
+      <label>Auto-lock after inactivity</label>
+      <select id="s-lock">${[1, 2, 5, 10, 30, 0].map(m => `<option value="${m}" ${settings.autoLockMin === m ? 'selected' : ''}>${m ? m + ' minute' + (m > 1 ? 's' : '') : 'Never'}</option>`).join('')}</select>
+      <label>Clear clipboard after copying</label>
+      <select id="s-clip">${[15, 30, 60, 0].map(s => `<option value="${s}" ${settings.clipSec === s ? 'selected' : ''}>${s ? s + ' seconds' : 'Never'}</option>`).join('')}</select>
+      <button class="btn block" id="s-chpw">Change master password</button>
+    </div>
+    <div class="section"><h3>Danger zone</h3>
+      <button class="btn danger block" id="s-wipe">Erase vault from this device</button>
+    </div>` : ''}
+    <p class="note" style="margin-top:24px;text-align:center">Lockbox · AES‑256‑GCM · PBKDF2‑SHA256 ${ITER.toLocaleString()} rounds</p>`);
+  $('#s-cid-save').onclick = () => { settings.clientId = $('#s-cid').value.trim(); saveSettings(); token = null; if (settings.clientId) loadGis().catch(() => {}); paintSync(); toast('Saved'); if (fromSetup){ closeSheet(); $('#btn-restore-drive').click(); } };
+  if (!unlocked) return;
+  $('#s-sync') && ($('#s-sync').onclick = () => syncDrive(true));
+  $('#s-export').onclick = exportFile;
+  $('#s-import').onclick = importFile;
+  $('#s-lock').onchange = e => { settings.autoLockMin = +e.target.value; saveSettings(); resetIdle(); };
+  $('#s-clip').onchange = e => { settings.clipSec = +e.target.value; saveSettings(); };
+  $('#s-chpw').onclick = changePassword;
+  $('#s-wipe').onclick = () => {
+    if (!confirm('Erase the vault from THIS device? Your Google Drive copy and backup files are not touched.')) return;
+    if (prompt('Type ERASE to confirm') !== 'ERASE') return;
+    localStorage.removeItem(LS_VAULT); S.key = S.vault = S.kdf = null; closeSheet(); show('#scr-setup');
+  };
+}
+$('#btn-settings').onclick = () => openSettings(false);
+
+function changePassword(){
+  openSheet(`<div class="sheet-head"><h2>Change master password</h2>${CLOSE}</div>
+    <label>Current master password</label><input id="c-old" type="password" autocomplete="current-password">
+    <label>New master password</label><input id="c-new" type="password" autocomplete="new-password"><div class="meter"><i id="c-meter"></i></div>
+    <label>Confirm new password</label><input id="c-new2" type="password" autocomplete="new-password">
+    <div class="err" id="c-err"></div>
+    <button class="btn primary block" id="c-ok">Change password</button>
+    <p class="note">Your other devices will ask for the new password the next time they sync.</p>`);
+  $('#c-new').oninput = e => paintMeter($('#c-meter'), e.target.value);
+  $('#c-ok').onclick = async () => {
+    const err = $('#c-err');
+    try { await unseal(JSON.parse(localStorage.getItem(LS_VAULT)), await deriveKey($('#c-old').value, S.kdf)); }
+    catch(e){ return err.textContent = 'Current password is wrong.'; }
+    if ($('#c-new').value.length < 8) return err.textContent = 'Use at least 8 characters.';
+    if ($('#c-new').value !== $('#c-new2').value) return err.textContent = 'New passwords do not match.';
+    err.textContent = 'Re-encrypting…';
+    const kdf = newKdf(); S.key = await deriveKey($('#c-new').value, kdf); S.kdf = kdf;
+    await persist(); closeSheet(); toast('Master password changed');
+    if (driveReady() && tokenValid()) syncDrive(false);
+  };
+}
+
+/* ================= boot ================= */
+if (!crypto.subtle){ document.body.innerHTML = '<p style="padding:24px">Lockbox needs a secure (https) connection to run.</p>'; }
+else {
+  show(localStorage.getItem(LS_VAULT) ? '#scr-unlock' : '#scr-setup');
+  if (driveReady()) loadGis().catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
